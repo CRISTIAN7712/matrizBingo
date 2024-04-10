@@ -1,5 +1,5 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QTableWidget, QTableWidgetItem, QLabel, QLineEdit, QPushButton, QMessageBox
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QTableWidget, QTableWidgetItem, QLabel, QLineEdit, QPushButton, QMessageBox, QHeaderView, QHBoxLayout, QSpacerItem, QSizePolicy  # Importar QHBoxLayout, QSpacerItem, QSizePolicy
 from PyQt5.QtGui import QColor, QFont
 from PyQt5.QtCore import Qt
 
@@ -21,14 +21,14 @@ class MatrizBingo(QMainWindow):
         self.layout.addWidget(self.table)
 
         letras = ["B", "I", "N", "G", "O"]
-        self.colores_filas = [QColor("#00A2FF"), QColor("#FF0000"), QColor("#00FFFB"), QColor("#17FF00"), QColor("#E8FF00")]
+        self.colores_filas = [QColor("#000000"), QColor("#000000"), QColor("#000000"), QColor("#000000"), QColor("#000000")]
 
-        self.table.setColumnCount(15)
-        self.table.setHorizontalHeaderLabels([str(i) for i in range(1, 16)])
         self.table.setRowCount(len(letras))
+        self.table.setColumnCount(15)
 
         # Ajustar el tamaño de la fuente de las letras "BINGO"
-        font = QFont("Arial", 24)  # Cambiar tamaño de fuente
+        font = QFont("Arial", weight=QFont.Bold)  # Especificar fuente negrita
+        font.setPointSize(24)  # Tamaño de la fuente
         for i, letra in enumerate(letras):
             item_letra = QTableWidgetItem(letra)
             item_letra.setBackground(self.colores_filas[i])
@@ -36,46 +36,76 @@ class MatrizBingo(QMainWindow):
             self.table.setVerticalHeaderItem(i, item_letra)
 
         for i in range(len(letras)):
-            self.table.setRowHeight(i, 50)  # Ajustar la altura de la fila
-
-        for i in range(len(letras)):
             for j in range(15):
                 item_numero = QTableWidgetItem(str(i * 15 + j + 1))
                 item_numero.setTextAlignment(Qt.AlignCenter)  # Centrar el texto dentro de la celda
                 self.table.setItem(i, j, item_numero)
+                item_numero.setForeground(QColor("white"))
                 item_numero.setFont(QFont("Arial", 16))  # Cambiar tamaño de fuente de los números
 
-        # Ajustar automáticamente el tamaño de las columnas y filas
-        self.table.resizeColumnsToContents()
-        self.table.resizeRowsToContents()
+        # Ocultar los encabezados de las columnas
+        self.table.horizontalHeader().hide()
 
-        # Ajustar el tamaño de las columnas
-        for j in range(15):
-            self.table.setColumnWidth(j, 70)  # Ajustar ancho de columnas
+        # Ajustar el tamaño de las filas y columnas automáticamente
+        self.table.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
-        # Obtener el tamaño preferido de la tabla y ajustar el tamaño de la ventana
-        table_size = self.table.sizeHint()
-        self.resize(table_size.width() + 850, table_size.height() + self.label.sizeHint().height() + 190)
+        # Habilitar el botón de maximizar en la ventana
+        self.setWindowFlag(Qt.WindowMaximizeButtonHint, True)
 
-        # Eliminar el botón de maximizar de la ventana
-        self.setWindowFlag(Qt.WindowMaximizeButtonHint, False)
+        # Crear un layout horizontal para colocar la etiqueta y el campo de entrada
+        balota_layout = QHBoxLayout()
 
+        # Agregar un espacio flexible al principio del layout horizontal
+        balota_layout.addSpacerItem(QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
+
+        # Crear la etiqueta "BALOTA:"
+        self.label_balota = QLabel("BALOTA:")
+        font = QFont("Arial", 14, weight=QFont.Bold)  # Ajustar tamaño y estilo de la fuente
+        self.label_balota.setFont(font)
+        balota_layout.addWidget(self.label_balota)
+
+        # Crear el campo para escribir el número
         self.entry_numero = QLineEdit()
-        self.layout.addWidget(self.entry_numero)
+        self.entry_numero.setFixedWidth(100)  # Establecer un ancho fijo para el campo de entrada
+        self.entry_numero.setFont(QFont("Arial", 12))  # Ajustar tamaño y estilo de la fuente
+        balota_layout.addWidget(self.entry_numero)
+
+        # Agregar un espacio flexible al final del layout horizontal para centrarlo
+        balota_layout.addSpacerItem(QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
+
+        # Agregar el layout horizontal al layout principal
+        self.layout.addLayout(balota_layout)
 
         self.btn_verificar = QPushButton("Verificar")
         self.btn_verificar.clicked.connect(self.verificar_numero)
+        self.btn_verificar.setFont(QFont("Arial", 14, weight=QFont.Bold))  # Ajustar tamaño y estilo de la fuente
         self.layout.addWidget(self.btn_verificar)
 
         self.btn_limpiar = QPushButton("Limpiar Tablero")
         self.btn_limpiar.clicked.connect(self.confirmar_limpiar_tablero)
+        self.btn_limpiar.setFont(QFont("Arial", 14, weight=QFont.Bold))  # Ajustar tamaño y estilo de la fuente
         self.layout.addWidget(self.btn_limpiar)
+
 
         # Agregar texto adicional al final de la ventana
         hecho_por_label = QLabel("Hecho por: CRISTIAN7712")
         hecho_por_label.setAlignment(Qt.AlignCenter)
         hecho_por_label.setStyleSheet("color: rgba(0, 0, 0, 100);")  # Definir el color de texto opaco
         self.layout.addWidget(hecho_por_label)
+
+        # Ajustar el tamaño de la ventana
+        self.resize(800, 600)
+
+    def closeEvent(self, event):
+        """Evento de cierre de la ventana."""
+        # Preguntar si el usuario está seguro de cerrar la ventana
+        respuesta = QMessageBox.question(self, "Cerrar aplicación", "¿Está seguro de que desea salir de la aplicación?", 
+                                         QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if respuesta == QMessageBox.Yes:
+            event.accept()  # Aceptar el cierre de la ventana
+        else:
+            event.ignore()  # Ignorar el cierre de la ventana
 
     def verificar_numero(self):
         numero = self.entry_numero.text()
@@ -92,7 +122,7 @@ class MatrizBingo(QMainWindow):
         self.entry_numero.setText("")
 
     def confirmar_limpiar_tablero(self):
-        respuesta = QMessageBox.question(self, "Confirmar", "¿Estás seguro de que quieres limpiar el tablero?",
+        respuesta = QMessageBox.question(self, "Confirmar", "¿Está seguro de que desea limpiar el tablero?",
                                          QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if respuesta == QMessageBox.Yes:
             self.limpiar_tablero()
